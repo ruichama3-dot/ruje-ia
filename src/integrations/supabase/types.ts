@@ -14,7 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          course: string | null
+          created_at: string
+          full_name: string
+          id: string
+          institution: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          course?: string | null
+          created_at?: string
+          full_name?: string
+          id: string
+          institution?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          course?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          institution?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      works: {
+        Row: {
+          academic_level: string | null
+          city: string | null
+          class_group: string | null
+          content: string
+          country: string | null
+          course: string | null
+          created_at: string
+          department: string | null
+          download_count: number
+          due_date: string | null
+          faculty: string | null
+          grade_year: string | null
+          id: string
+          institution: string | null
+          is_public: boolean
+          language: string
+          norms: string
+          options: Json
+          pages: number
+          student_name: string | null
+          student_number: string | null
+          subject: string | null
+          teacher: string | null
+          theme: string
+          title: string
+          updated_at: string
+          user_id: string
+          work_type: string
+        }
+        Insert: {
+          academic_level?: string | null
+          city?: string | null
+          class_group?: string | null
+          content?: string
+          country?: string | null
+          course?: string | null
+          created_at?: string
+          department?: string | null
+          download_count?: number
+          due_date?: string | null
+          faculty?: string | null
+          grade_year?: string | null
+          id?: string
+          institution?: string | null
+          is_public?: boolean
+          language?: string
+          norms?: string
+          options?: Json
+          pages?: number
+          student_name?: string | null
+          student_number?: string | null
+          subject?: string | null
+          teacher?: string | null
+          theme: string
+          title: string
+          updated_at?: string
+          user_id: string
+          work_type: string
+        }
+        Update: {
+          academic_level?: string | null
+          city?: string | null
+          class_group?: string | null
+          content?: string
+          country?: string | null
+          course?: string | null
+          created_at?: string
+          department?: string | null
+          download_count?: number
+          due_date?: string | null
+          faculty?: string | null
+          grade_year?: string | null
+          id?: string
+          institution?: string | null
+          is_public?: boolean
+          language?: string
+          norms?: string
+          options?: Json
+          pages?: number
+          student_name?: string | null
+          student_number?: string | null
+          subject?: string | null
+          teacher?: string | null
+          theme?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          work_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
