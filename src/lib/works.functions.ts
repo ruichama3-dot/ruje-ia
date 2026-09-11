@@ -5,7 +5,7 @@ import { z } from "zod";
 const GenerateInput = z.object({ workId: z.string().uuid() });
 
 function buildPrompt(w: Record<string, unknown>) {
-  const opt = (w.options ?? {}) as Record<string, boolean>;
+  const opt = (w['options'] ?? {}) as Record<string, boolean>;
   const f = (k: string) => (w[k] ? String(w[k]) : "—");
   return `És um assistente académico especialista. Escreve um trabalho académico COMPLETO em ${f("language")}, do tipo "${f("work_type")}", nível ${f("academic_level")}, seguindo rigorosamente as normas ${f("norms")}.
 
@@ -20,7 +20,7 @@ DADOS:
 - Extensão alvo: aproximadamente ${f("pages")} páginas (escreve texto extenso e denso, sem repetições).
 
 ESTRUTURA OBRIGATÓRIA, por esta ordem:
-${opt.cover === false ? "" : "1. Capa\n2. Folha de Rosto\n"}${opt.index === false ? "" : "3. Índice\n"}4. Introdução
+${opt['cover'] === false ? "" : "1. Capa\n2. Folha de Rosto\n"}${opt['index'] === false ? "" : "3. Índice\n"}4. Introdução
 5. Objetivo Geral
 6. Objetivos Específicos
 7. Fundamentação Teórica
@@ -30,7 +30,7 @@ ${opt.cover === false ? "" : "1. Capa\n2. Folha de Rosto\n"}${opt.index === fals
 11. Discussão
 12. Conclusão
 13. Recomendações
-14. Referências Bibliográficas${opt.citations === false ? "" : " (com citações no corpo do texto)"}
+14. Referências Bibliográficas${opt['citations'] === false ? "" : " (com citações no corpo do texto)"}
 15. Anexos (se aplicável)
 
 REGRAS DE SAÍDA:
