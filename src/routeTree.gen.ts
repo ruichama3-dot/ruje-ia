@@ -13,8 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedNovoTrabalhoRouteImport } from './routes/_authenticated/novo-trabalho'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as PartilhaIdRouteImport } from './routes/partilha.$id'
+import { Route as AuthenticatedTrabalhoIdRouteImport } from './routes/_authenticated/trabalho.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,6 +38,12 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNovoTrabalhoRoute =
+  AuthenticatedNovoTrabalhoRouteImport.update({
+    id: '/novo-trabalho',
+    path: '/novo-trabalho',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   id: '/painel',
   path: '/painel',
@@ -45,20 +54,36 @@ const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const PartilhaIdRoute = PartilhaIdRouteImport.update({
+  id: '/partilha/$id',
+  path: '/partilha/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTrabalhoIdRoute = AuthenticatedTrabalhoIdRouteImport.update({
+  id: '/trabalho/$id',
+  path: '/trabalho/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/partilha/$id': typeof PartilhaIdRoute
+  '/trabalho/$id': typeof AuthenticatedTrabalhoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/partilha/$id': typeof PartilhaIdRoute
+  '/trabalho/$id': typeof AuthenticatedTrabalhoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -66,22 +91,44 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/partilha/$id': typeof PartilhaIdRoute
+  '/_authenticated/trabalho/$id': typeof AuthenticatedTrabalhoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/painel' | '/perfil'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/novo-trabalho'
+    | '/painel'
+    | '/perfil'
+    | '/partilha/$id'
+    | '/trabalho/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/painel' | '/perfil'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/novo-trabalho'
+    | '/painel'
+    | '/perfil'
+    | '/partilha/$id'
+    | '/trabalho/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/novo-trabalho'
     | '/_authenticated/painel'
     | '/_authenticated/perfil'
+    | '/partilha/$id'
+    | '/_authenticated/trabalho/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +136,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  PartilhaIdRoute: typeof PartilhaIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -121,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/novo-trabalho': {
+      id: '/_authenticated/novo-trabalho'
+      path: '/novo-trabalho'
+      fullPath: '/novo-trabalho'
+      preLoaderRoute: typeof AuthenticatedNovoTrabalhoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/painel': {
       id: '/_authenticated/painel'
       path: '/painel'
@@ -135,17 +190,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/partilha/$id': {
+      id: '/partilha/$id'
+      path: '/partilha/$id'
+      fullPath: '/partilha/$id'
+      preLoaderRoute: typeof PartilhaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/trabalho/$id': {
+      id: '/_authenticated/trabalho/$id'
+      path: '/trabalho/$id'
+      fullPath: '/trabalho/$id'
+      preLoaderRoute: typeof AuthenticatedTrabalhoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedNovoTrabalhoRoute: typeof AuthenticatedNovoTrabalhoRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedTrabalhoIdRoute: typeof AuthenticatedTrabalhoIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedNovoTrabalhoRoute: AuthenticatedNovoTrabalhoRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedTrabalhoIdRoute: AuthenticatedTrabalhoIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -156,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  PartilhaIdRoute: PartilhaIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
