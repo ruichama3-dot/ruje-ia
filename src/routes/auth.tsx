@@ -64,7 +64,7 @@ function AuthPage() {
     setLoading(false);
     if (error) { toast.error(error.message); return; }
     if (data.session) { navigate({ to: "/painel" }); return; }
-    toast.success("Conta criada! Confirme o seu e-mail para entrar.");
+    toast.success("Conta criada! Já pode entrar.");
   }
 
   async function handleReset() {
