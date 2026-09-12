@@ -26,6 +26,7 @@ function AuthPage() {
   const { modo } = Route.useSearch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
