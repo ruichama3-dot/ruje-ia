@@ -6,6 +6,7 @@ import {
   FileText,
   GraduationCap,
   Languages,
+  MessageCircle,
   ShieldCheck,
   Sparkles,
   Wand2,
@@ -96,9 +97,20 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border py-8 text-center">
-        <p className="text-muted-foreground text-sm">
-          RuJe IA 🇲🇿 — a plataforma africana de criação de trabalhos académicos.
-        </p>
+        <div className="mx-auto max-w-6xl px-5">
+          <Button asChild variant="outline" className="mb-4">
+            <a
+              href="https://chat.whatsapp.com/CU2WmZIWDDvJURM2eqOtKT"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle className="h-4 w-4" /> Comunidade WhatsApp — converse, dê opiniões e fique atento aos cursos com certificado
+            </a>
+          </Button>
+          <p className="text-muted-foreground text-sm">
+            RuJe IA 🇲🇿 — a plataforma africana de criação de trabalhos académicos.
+          </p>
+        </div>
       </footer>
     </div>
   );

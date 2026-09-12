@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Download, Clock, Sparkles, Settings, BookOpen } from "lucide-react";
+import { Plus, FileText, Download, Clock, Sparkles, Settings, BookOpen, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -107,6 +107,24 @@ function Painel() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-xl font-bold">Comunidade WhatsApp</h2>
+        <div className="shadow-soft mt-4 rounded-2xl border border-border bg-card p-5">
+          <p className="text-muted-foreground text-sm">
+            Converse com outros estudantes, partilhe opiniões e fique atento aos cursos com certificado.
+          </p>
+          <Button asChild className="mt-4">
+            <a
+              href="https://chat.whatsapp.com/CU2WmZIWDDvJURM2eqOtKT"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle className="h-4 w-4" /> Entrar na comunidade
+            </a>
+          </Button>
+        </div>
       </section>
 
       <section className="mt-12">
