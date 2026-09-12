@@ -42,7 +42,7 @@ function AuthPage() {
       password: String(form.get("password")),
     });
     setLoading(false);
-    if (error) return toast.error("E-mail ou palavra-passe incorrectos.");
+    if (error) { toast.error("E-mail ou palavra-passe incorrectos."); return; }
     navigate({ to: "/painel" });
   }
 
@@ -50,8 +50,8 @@ function AuthPage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const password = String(form.get("password"));
-    if (password !== String(form.get("confirm"))) return toast.error("As palavras-passe não coincidem.");
-    if (password.length < 6) return toast.error("A palavra-passe deve ter pelo menos 6 caracteres.");
+    if (password !== String(form.get("confirm"))) { toast.error("As palavras-passe não coincidem."); return; }
+    if (password.length < 6) { toast.error("A palavra-passe deve ter pelo menos 6 caracteres."); return; }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email: String(form.get("email")).trim(),
@@ -62,8 +62,8 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
-    if (data.session) return navigate({ to: "/painel" });
+    if (error) { toast.error(error.message); return; }
+    if (data.session) { navigate({ to: "/painel" }); return; }
     toast.success("Conta criada! Confirme o seu e-mail para entrar.");
   }
 
@@ -73,7 +73,7 @@ function AuthPage() {
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Enviámos um link de recuperação para o seu e-mail.");
   }
 

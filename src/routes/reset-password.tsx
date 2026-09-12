@@ -27,11 +27,11 @@ function ResetPassword() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const password = String(form.get("password"));
-    if (password !== String(form.get("confirm"))) return toast.error("As palavras-passe não coincidem.");
+    if (password !== String(form.get("confirm"))) { toast.error("As palavras-passe não coincidem."); return; }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Palavra-passe actualizada.");
     navigate({ to: "/painel" });
   }
