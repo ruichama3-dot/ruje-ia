@@ -16,7 +16,9 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedNovoTrabalhoRouteImport } from './routes/_authenticated/novo-trabalho'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as PartilhaIdRouteImport } from './routes/partilha.$id'
+import { Route as AuthenticatedAmostraIdRouteImport } from './routes/_authenticated/amostra.$id'
 import { Route as AuthenticatedTrabalhoIdRouteImport } from './routes/_authenticated/trabalho.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -54,10 +56,20 @@ const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const PartilhaIdRoute = PartilhaIdRouteImport.update({
   id: '/partilha/$id',
   path: '/partilha/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAmostraIdRoute = AuthenticatedAmostraIdRouteImport.update({
+  id: '/amostra/$id',
+  path: '/amostra/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTrabalhoIdRoute = AuthenticatedTrabalhoIdRouteImport.update({
   id: '/trabalho/$id',
@@ -72,7 +84,9 @@ export interface FileRoutesByFullPath {
   '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/planos': typeof AuthenticatedPlanosRoute
   '/partilha/$id': typeof PartilhaIdRoute
+  '/amostra/$id': typeof AuthenticatedAmostraIdRoute
   '/trabalho/$id': typeof AuthenticatedTrabalhoIdRoute
 }
 export interface FileRoutesByTo {
@@ -82,7 +96,9 @@ export interface FileRoutesByTo {
   '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/planos': typeof AuthenticatedPlanosRoute
   '/partilha/$id': typeof PartilhaIdRoute
+  '/amostra/$id': typeof AuthenticatedAmostraIdRoute
   '/trabalho/$id': typeof AuthenticatedTrabalhoIdRoute
 }
 export interface FileRoutesById {
@@ -94,7 +110,9 @@ export interface FileRoutesById {
   '/_authenticated/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/partilha/$id': typeof PartilhaIdRoute
+  '/_authenticated/amostra/$id': typeof AuthenticatedAmostraIdRoute
   '/_authenticated/trabalho/$id': typeof AuthenticatedTrabalhoIdRoute
 }
 export interface FileRouteTypes {
@@ -106,7 +124,9 @@ export interface FileRouteTypes {
     | '/novo-trabalho'
     | '/painel'
     | '/perfil'
+    | '/planos'
     | '/partilha/$id'
+    | '/amostra/$id'
     | '/trabalho/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,7 +136,9 @@ export interface FileRouteTypes {
     | '/novo-trabalho'
     | '/painel'
     | '/perfil'
+    | '/planos'
     | '/partilha/$id'
+    | '/amostra/$id'
     | '/trabalho/$id'
   id:
     | '__root__'
@@ -127,7 +149,9 @@ export interface FileRouteTypes {
     | '/_authenticated/novo-trabalho'
     | '/_authenticated/painel'
     | '/_authenticated/perfil'
+    | '/_authenticated/planos'
     | '/partilha/$id'
+    | '/_authenticated/amostra/$id'
     | '/_authenticated/trabalho/$id'
   fileRoutesById: FileRoutesById
 }
@@ -190,12 +214,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/planos': {
+      id: '/_authenticated/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof AuthenticatedPlanosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/partilha/$id': {
       id: '/partilha/$id'
       path: '/partilha/$id'
       fullPath: '/partilha/$id'
       preLoaderRoute: typeof PartilhaIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/amostra/$id': {
+      id: '/_authenticated/amostra/$id'
+      path: '/amostra/$id'
+      fullPath: '/amostra/$id'
+      preLoaderRoute: typeof AuthenticatedAmostraIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/trabalho/$id': {
       id: '/_authenticated/trabalho/$id'
@@ -211,6 +249,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNovoTrabalhoRoute: typeof AuthenticatedNovoTrabalhoRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
+  AuthenticatedAmostraIdRoute: typeof AuthenticatedAmostraIdRoute
   AuthenticatedTrabalhoIdRoute: typeof AuthenticatedTrabalhoIdRoute
 }
 
@@ -218,6 +258,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNovoTrabalhoRoute: AuthenticatedNovoTrabalhoRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
+  AuthenticatedAmostraIdRoute: AuthenticatedAmostraIdRoute,
   AuthenticatedTrabalhoIdRoute: AuthenticatedTrabalhoIdRoute,
 }
 
