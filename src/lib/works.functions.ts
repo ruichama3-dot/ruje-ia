@@ -1,18 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { FREE_DAILY_LIMIT } from "@/lib/plans";
 
 const GenerateInput = z.object({ workId: z.string().uuid() });
 
 function buildPrompt(w: Record<string, unknown>) {
   const opt = (w['options'] ?? {}) as Record<string, boolean>;
   const f = (k: string) => (w[k] ? String(w[k]) : "—");
+  const isGroup = String(w['work_mode'] ?? "individual") === "grupo";
+  const manualRefs = String(w['references_mode'] ?? "automatica") === "manual";
+
   return `És um assistente académico especialista. Escreve um trabalho académico COMPLETO em ${f("language")}, do tipo "${f("work_type")}", nível ${f("academic_level")}, seguindo rigorosamente as normas ${f("norms")}.
 
 DADOS:
 - Tema: ${f("theme")}
 - Título: ${f("title")}
-- Estudante: ${f("student_name")} (nº ${f("student_number")})
+- Modalidade: ${isGroup ? "TRABALHO EM GRUPO" : "TRABALHO INDIVIDUAL"}
+${isGroup ? `- Elementos do grupo (lista numerada na folha de rosto): ${f("group_members")}` : `- Estudante: ${f("student_name")} (nº ${f("student_number")})`}
 - Curso: ${f("course")} | Turma: ${f("class_group")} | Classe/Ano: ${f("grade_year")}
 - Instituição: ${f("institution")} | Faculdade: ${f("faculty")} | Departamento: ${f("department")}
 - Disciplina: ${f("subject")} | Docente: ${f("teacher")}
@@ -30,13 +35,26 @@ ${opt['cover'] === false ? "" : "1. Capa\n2. Folha de Rosto\n"}${opt['index'] ==
 11. Discussão
 12. Conclusão
 13. Recomendações
-14. Referências Bibliográficas${opt['citations'] === false ? "" : " (com citações no corpo do texto)"}
+14. Referências Bibliográficas
 15. Anexos (se aplicável)
+
+REFERÊNCIAS BIBLIOGRÁFICAS:
+${manualRefs
+  ? `- O utilizador escolheu REFERÊNCIAS MANUAIS. Usa EXACTAMENTE e apenas as referências indicadas abaixo, formatando-as segundo as normas ${f("norms")}, e cita-as no corpo do texto:\n${f("manual_references")}`
+  : `- Gera referências bibliográficas reais e credíveis segundo as normas ${f("norms")}${opt['citations'] === false ? "" : ", com citações no corpo do texto"}.`}
 
 REGRAS DE SAÍDA:
 - Devolve APENAS HTML simples do corpo do documento: <h1>, <h2>, <h3>, <p>, <ul>, <li>, <table>, <strong>. Sem markdown, sem \`\`\`, sem <html> ou <body>.
-- A capa deve ser centrada com <p style="text-align:center"> contendo instituição, faculdade, departamento, curso, título, estudante, docente, cidade e data.
+- SEPARAÇÃO EM PÁGINAS OBRIGATÓRIA: separa cada página com exactamente <hr class="page-break">. A capa é uma página; a folha de rosto é outra; o índice é outra; a introdução começa em página nova; a conclusão, as recomendações e as referências bibliográficas ficam cada uma em página própria. Distribui o desenvolvimento por várias páginas, com cerca de 350 a 450 palavras por página, até atingir aproximadamente ${f("pages")} páginas no total.
+- A capa deve ser centrada com <p style="text-align:center"> contendo instituição, faculdade, departamento, curso, título, ${isGroup ? "a indicação \"Trabalho em grupo\"" : "estudante"}, docente, cidade e data.
+${isGroup ? "- A folha de rosto deve conter a lista numerada dos elementos do grupo." : ""}
 - Linguagem académica formal, rigorosa e original. Nada de texto de exemplo tipo "insira aqui".`;
+}
+
+function startOfTodayISO() {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d.toISOString();
 }
 
 export const generateWork = createServerFn({ method: "POST" })
@@ -45,6 +63,38 @@ export const generateWork = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) throw new Error("Serviço de IA indisponível.");
+
+    // Administradores têm acesso ilimitado.
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      const { data: subs } = await context.supabase
+        .from("subscriptions")
+        .select("daily_limit, expires_at")
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: false })
+        .limit(1);
+
+      const limit = subs?.[0]?.daily_limit ?? FREE_DAILY_LIMIT;
+
+      const { count } = await context.supabase
+        .from("works")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", context.userId)
+        .neq("content", "")
+        .gte("created_at", startOfTodayISO());
+
+      if ((count ?? 0) >= limit) {
+        throw new Error(
+          subs?.[0]
+            ? `Atingiu o limite de ${limit} trabalhos por dia do seu plano. Tente novamente amanhã.`
+            : "Já usou o seu trabalho gratuito de hoje. Escolha um plano para continuar a criar trabalhos.",
+        );
+      }
+    }
 
     const { data: work, error } = await context.supabase
       .from("works")
