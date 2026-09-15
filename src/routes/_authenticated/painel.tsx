@@ -1,14 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Download, Clock, Sparkles, Settings, BookOpen, MessageCircle } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Download,
+  Clock,
+  Sparkles,
+  Settings,
+  BookOpen,
+  MessageCircle,
+  Copy,
+  Eye,
+  Crown,
+  ShieldCheck,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
       { title: "Painel | RuJe IA" },
-      { name: "description", content: "Os seus trabalhos, downloads e estatísticas na RuJe IA." },
+      { name: "description", content: "Os seus trabalhos, downloads, planos e estatísticas na RuJe IA." },
       { property: "og:title", content: "Painel | RuJe IA" },
       { property: "og:description", content: "Os seus trabalhos académicos num só lugar." },
     ],
@@ -18,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/painel")({
 
 function Painel() {
   const { user } = Route.useRouteContext();
+  const { isAdmin } = useIsAdmin();
 
   const { data: works = [], isLoading } = useQuery({
     queryKey: ["works"],
@@ -25,9 +40,31 @@ function Painel() {
       const { data, error } = await supabase
         .from("works")
         .select("*")
+        .eq("user_id", user.id)
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: samples = [] } = useQuery({
+    queryKey: ["samples"],
+    queryFn: async () => {
+      const { data } = await supabase.from("samples").select("*").order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const { data: sub } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: false })
+        .limit(1);
+      return data?.[0] ?? null;
     },
   });
 
@@ -47,6 +84,12 @@ function Painel() {
     },
   ];
 
+  const planLabel = isAdmin
+    ? "Administrador · acesso ilimitado"
+    : sub
+      ? `${sub.plan} · ${sub.daily_limit} trabalhos/dia até ${new Date(sub.expires_at).toLocaleDateString("pt-PT")}`
+      : "Plano grátis · 1 trabalho por dia";
+
   return (
     <main className="mx-auto max-w-6xl px-5 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -61,7 +104,26 @@ function Painel() {
         </Button>
       </div>
 
-      <div className="mt-7 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary bg-secondary/50 p-5">
+        <p className="flex items-center gap-2 font-semibold">
+          {isAdmin ? <ShieldCheck className="h-4 w-4 text-primary" /> : <Crown className="h-4 w-4 text-primary" />}
+          {planLabel}
+        </p>
+        <div className="flex gap-2">
+          {isAdmin && (
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin">Painel admin</Link>
+            </Button>
+          )}
+          {!isAdmin && (
+            <Button asChild size="sm">
+              <Link to="/planos">{sub ? "Renovar plano" : "Ver planos"}</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {stats.map((s) => (
           <div key={s.label} className="shadow-soft rounded-2xl border border-border bg-card p-5">
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -71,6 +133,41 @@ function Painel() {
           </div>
         ))}
       </div>
+
+      {samples.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-bold">Trabalhos de amostra</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Veja um trabalho completo feito na RuJe IA e crie o seu no mesmo modelo.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {samples.map((s) => (
+              <div key={s.id} className="shadow-soft rounded-2xl border border-border bg-card p-5">
+                <span className="bg-brand rounded-full px-2.5 py-1 text-[11px] font-bold text-primary-foreground">
+                  AMOSTRA
+                </span>
+                <p className="mt-3 font-semibold">{s.title}</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {s.work_type} · {s.work_mode === "grupo" ? "Trabalho em grupo" : "Individual"}
+                  {s.institution ? ` · ${s.institution}` : ""}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/amostra/$id" params={{ id: s.id }}>
+                      <Eye className="h-4 w-4" /> Ver trabalho
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/novo-trabalho" search={{ amostra: s.id }}>
+                      <Copy className="h-4 w-4" /> Fazer igual
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="text-xl font-bold">Histórico de trabalhos</h2>
@@ -95,7 +192,7 @@ function Painel() {
                 <div>
                   <p className="font-semibold">{w.title}</p>
                   <p className="text-muted-foreground mt-0.5 text-sm">
-                    {w.work_type} · {w.theme}
+                    {w.work_type} · {w.work_mode === "grupo" ? "Grupo" : "Individual"} · {w.theme}
                   </p>
                 </div>
                 <div className="text-muted-foreground text-right text-xs">
