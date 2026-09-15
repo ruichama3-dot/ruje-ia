@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DocPages, type DocPagesHandle } from "@/components/DocPages";
-import { PAGE_BREAK, joinPages, splitPages } from "@/lib/doc-pages";
+import { joinPages, splitPages } from "@/lib/doc-pages";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
