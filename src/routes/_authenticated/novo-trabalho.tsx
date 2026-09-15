@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { generateWork } from "@/lib/works.functions";
@@ -8,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, Users, User as UserIcon, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/novo-trabalho")({
+  validateSearch: z.object({ amostra: z.string().uuid().optional() }),
   head: () => ({
     meta: [
       { title: "Criar novo trabalho | RuJe IA" },
@@ -49,13 +52,24 @@ function Field({ id, label, ...rest }: { id: string; label: string } & React.Com
   );
 }
 
-function Sel({ id, label, options }: { id: string; label: string; options: string[] }) {
+function Sel({
+  id,
+  label,
+  options,
+  defaultValue,
+}: {
+  id: string;
+  label: string;
+  options: string[];
+  defaultValue?: string;
+}) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <select
         id={id}
         name={id}
+        defaultValue={defaultValue}
         className="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {options.map((o) => (
@@ -68,12 +82,53 @@ function Sel({ id, label, options }: { id: string; label: string; options: strin
   );
 }
 
+function Choice({
+  active,
+  onClick,
+  icon: Icon,
+  title,
+  text,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Users;
+  title: string;
+  text: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border-2 p-4 text-left transition-colors ${
+        active ? "border-primary bg-secondary/50" : "border-border hover:border-primary/40"
+      }`}
+    >
+      <Icon className="h-5 w-5 text-primary" />
+      <p className="mt-2 font-semibold">{title}</p>
+      <p className="text-muted-foreground mt-0.5 text-sm">{text}</p>
+    </button>
+  );
+}
+
 function NovoTrabalho() {
   const { user } = Route.useRouteContext();
+  const { amostra } = Route.useSearch();
   const navigate = useNavigate();
   const generate = useServerFn(generateWork);
   const [busy, setBusy] = useState(false);
   const [opts, setOpts] = useState({ cover: true, index: true, citations: true, references: true });
+  const [mode, setMode] = useState<"individual" | "grupo">("individual");
+  const [refsMode, setRefsMode] = useState<"automatica" | "manual">("automatica");
+
+  const { data: sample, isLoading: loadingSample } = useQuery({
+    queryKey: ["sample", amostra],
+    enabled: Boolean(amostra),
+    queryFn: async () => {
+      const { data } = await supabase.from("samples").select("*").eq("id", amostra!).maybeSingle();
+      if (data?.work_mode === "grupo") setMode("grupo");
+      return data;
+    },
+  });
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -88,6 +143,10 @@ function NovoTrabalho() {
           theme: s("theme"),
           title: s("title") || s("theme"),
           work_type: s("work_type"),
+          work_mode: mode,
+          group_members: mode === "grupo" ? s("group_members") : null,
+          references_mode: refsMode,
+          manual_references: refsMode === "manual" ? s("manual_references") : null,
           student_name: s("student_name"),
           student_number: s("student_number"),
           course: s("course"),
@@ -121,28 +180,75 @@ function NovoTrabalho() {
     }
   }
 
+  if (amostra && loadingSample) {
+    return <main className="mx-auto max-w-4xl px-5 py-10 text-muted-foreground">A carregar o modelo…</main>;
+  }
+
   return (
     <main className="mx-auto max-w-4xl px-5 py-8">
       <h1 className="text-3xl font-extrabold">Criar novo trabalho</h1>
       <p className="text-muted-foreground mt-1">Quanto mais completo o formulário, melhor o resultado.</p>
+      {sample && (
+        <p className="mt-3 rounded-xl border border-primary bg-secondary/50 px-4 py-2.5 text-sm">
+          A usar o modelo: <strong>{sample.title}</strong>. Altere os dados para o seu trabalho.
+        </p>
+      )}
 
       <form onSubmit={onSubmit} className="mt-7 space-y-6">
+        <section className="shadow-soft rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-lg font-bold">Modalidade do trabalho</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Choice
+              active={mode === "individual"}
+              onClick={() => setMode("individual")}
+              icon={UserIcon}
+              title="Trabalho individual"
+              text="A capa e a folha de rosto levam o seu nome e número."
+            />
+            <Choice
+              active={mode === "grupo"}
+              onClick={() => setMode("grupo")}
+              icon={Users}
+              title="Trabalho em grupo"
+              text="A folha de rosto lista todos os elementos do grupo."
+            />
+          </div>
+          {mode === "grupo" && (
+            <div className="mt-4 space-y-1.5">
+              <Label htmlFor="group_members">Elementos do grupo (um por linha)</Label>
+              <Textarea
+                id="group_members"
+                name="group_members"
+                rows={5}
+                placeholder={"1- Abstinência José Pedro\n2- Adélia Agostinho\n3- Ágata Remígio"}
+              />
+            </div>
+          )}
+        </section>
+
         <section className="shadow-soft rounded-2xl border border-border bg-card p-6">
           <h2 className="text-lg font-bold">Informações académicas</h2>
           <div className="mt-4 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="theme">Tema do trabalho</Label>
-              <Textarea id="theme" name="theme" required rows={2} placeholder="Ex.: Impacto das energias renováveis em Moçambique" />
+              <Textarea
+                id="theme"
+                name="theme"
+                required
+                rows={2}
+                defaultValue={sample?.theme ?? ""}
+                placeholder="Ex.: Impacto das energias renováveis em Moçambique"
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="title" label="Título do trabalho" />
-              <Sel id="work_type" label="Tipo de trabalho" options={WORK_TYPES} />
+              <Field id="title" label="Título do trabalho" defaultValue={sample?.title ?? ""} />
+              <Sel id="work_type" label="Tipo de trabalho" options={WORK_TYPES} defaultValue={sample?.work_type} />
               <Field id="student_name" label="Nome do estudante" />
               <Field id="student_number" label="Número do estudante" />
               <Field id="course" label="Curso" />
               <Field id="class_group" label="Turma" />
               <Field id="grade_year" label="Classe / Ano" />
-              <Field id="institution" label="Instituição de ensino" />
+              <Field id="institution" label="Instituição de ensino" defaultValue={sample?.institution ?? ""} />
               <Field id="faculty" label="Faculdade" />
               <Field id="department" label="Departamento" />
               <Field id="subject" label="Disciplina" />
@@ -152,6 +258,37 @@ function NovoTrabalho() {
               <Field id="due_date" label="Data de entrega" type="date" />
             </div>
           </div>
+        </section>
+
+        <section className="shadow-soft rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-lg font-bold">Referências bibliográficas</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Choice
+              active={refsMode === "automatica"}
+              onClick={() => setRefsMode("automatica")}
+              icon={Wand2}
+              title="Automáticas"
+              text="A IA escolhe e formata as referências e as citações."
+            />
+            <Choice
+              active={refsMode === "manual"}
+              onClick={() => setRefsMode("manual")}
+              icon={BookMarked}
+              title="Manuais"
+              text="Indica as suas referências e a IA usa apenas essas."
+            />
+          </div>
+          {refsMode === "manual" && (
+            <div className="mt-4 space-y-1.5">
+              <Label htmlFor="manual_references">As suas referências (uma por linha)</Label>
+              <Textarea
+                id="manual_references"
+                name="manual_references"
+                rows={5}
+                placeholder={"LUCKESI, C. C. Avaliação da Aprendizagem Escolar. São Paulo: Cortez, 2011."}
+              />
+            </div>
+          )}
         </section>
 
         <section className="shadow-soft rounded-2xl border border-border bg-card p-6">
