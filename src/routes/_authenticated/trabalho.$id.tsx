@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { DocPages, type DocPagesHandle } from "@/components/DocPages";
+import { PAGE_BREAK, joinPages, splitPages } from "@/lib/doc-pages";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -19,13 +21,14 @@ import {
   FileDown,
   FileText,
   Share2,
+  FilePlus2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/trabalho/$id")({
   head: () => ({
     meta: [
       { title: "Editor de trabalho | RuJe IA" },
-      { name: "description", content: "Edite, formate e exporte o seu trabalho académico." },
+      { name: "description", content: "Edite, formate e exporte o seu trabalho académico página a página." },
       { property: "og:title", content: "Editor de trabalho | RuJe IA" },
       { property: "og:description", content: "Edite e exporte o seu trabalho em PDF ou Word." },
     ],
@@ -38,47 +41,63 @@ const SIZES = ["1", "2", "3", "4", "5", "6", "7"];
 
 function Editor() {
   const { id } = Route.useParams();
-  const ref = useRef<HTMLDivElement>(null);
+  const docRef = useRef<DocPagesHandle>(null);
   const [saving, setSaving] = useState(false);
+  const [html, setHtml] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
 
   const { data: work } = useQuery({
     queryKey: ["work", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("works").select("*").eq("id", id).single();
       if (error) throw error;
+      setHtml((prev) => prev ?? data.content);
       return data;
     },
   });
 
-  useEffect(() => {
-    if (work && ref.current && !ref.current.innerHTML) ref.current.innerHTML = work.content;
-  }, [work]);
-
   const cmd = (command: string, value?: string) => {
-    ref.current?.focus();
+    docRef.current?.focusedPage()?.focus();
     document.execCommand(command, false, value);
   };
 
+  function currentHtml() {
+    return docRef.current?.getHtml() ?? html ?? "";
+  }
+
   async function save() {
-    if (!ref.current) return;
+    const content = currentHtml();
     setSaving(true);
-    const { error } = await supabase.from("works").update({ content: ref.current.innerHTML }).eq("id", id);
+    const { error } = await supabase.from("works").update({ content }).eq("id", id);
     setSaving(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+    setHtml(content);
     toast.success("Alterações guardadas.");
   }
 
+  function addPage() {
+    const pages = splitPages(currentHtml());
+    pages.push("<p><br/></p>");
+    setHtml(joinPages(pages));
+    setVersion((v) => v + 1);
+    toast.success("Nova página adicionada no fim do documento.");
+  }
+
   function exportDocx() {
-    if (!ref.current || !work) return;
-    const html = `<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6}p{text-align:justify}</style></head><body>${ref.current.innerHTML}</body></html>`;
-    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    if (!work) return;
+    const pages = splitPages(currentHtml());
+    const body = pages
+      .map((p, i) => `<div${i < pages.length - 1 ? ' style="page-break-after:always"' : ""}>${p}</div>`)
+      .join("");
+    const doc = `<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6}p{text-align:justify}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px}</style></head><body>${body}</body></html>`;
+    const blob = new Blob(["\ufeff", doc], { type: "application/msword" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${work.title}.docx`;
+    a.download = `${work.title}.doc`;
     a.click();
     URL.revokeObjectURL(url);
     void supabase
@@ -113,13 +132,18 @@ function Editor() {
   }
 
   const btn = "inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent";
+  const pageCount = splitPages(html ?? "").length;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-extrabold">{work?.title ?? "A carregar…"}</h1>
-          <p className="text-muted-foreground text-sm">{work?.work_type}</p>
+          <p className="text-muted-foreground text-sm">
+            {work?.work_type}
+            {work && ` · ${work.work_mode === "grupo" ? "Trabalho em grupo" : "Trabalho individual"}`}
+            {html !== null && ` · ${pageCount} páginas`}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={save} disabled={saving}>
@@ -186,14 +210,15 @@ function Editor() {
         <button type="button" className={btn} onClick={insertTable} aria-label="Inserir tabela">
           <TableIcon className="h-4 w-4" />
         </button>
+        <Button variant="outline" size="sm" className="ml-auto" onClick={addPage}>
+          <FilePlus2 className="h-4 w-4" /> Nova página
+        </Button>
       </div>
 
-      <div
-        ref={ref}
-        contentEditable
-        suppressContentEditableWarning
-        className="doc-sheet shadow-soft mt-5 min-h-[60vh] rounded-2xl border border-border bg-white p-8 outline-none sm:p-14"
-      />
+      {html !== null && <DocPages ref={docRef} html={html} editable version={version} />}
+      <p className="text-muted-foreground mt-4 text-xs print:hidden">
+        Cada folha acima é uma página do documento ({PAGE_BREAK === "" ? "" : ""}o PDF e o Word mantêm esta separação).
+      </p>
     </main>
   );
 }

@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, CreditCard, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isAdmin } = useIsAdmin();
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -34,6 +36,18 @@ function AuthedLayout() {
             <Logo size="sm" />
           </Link>
           <div className="flex items-center gap-1">
+            {isAdmin && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin">
+                  <ShieldCheck className="h-4 w-4" /> Admin
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/planos">
+                <CreditCard className="h-4 w-4" /> Planos
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link to="/perfil">
                 <User className="h-4 w-4" /> Perfil
