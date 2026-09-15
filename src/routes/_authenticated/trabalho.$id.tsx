@@ -217,8 +217,9 @@ function Editor() {
 
       {html !== null && <DocPages ref={docRef} html={html} editable version={version} />}
       <p className="text-muted-foreground mt-4 text-xs print:hidden">
-        Cada folha acima é uma página do documento ({PAGE_BREAK === "" ? "" : ""}o PDF e o Word mantêm esta separação).
+        Cada folha acima é uma página do documento — o PDF e o Word mantêm esta separação.
       </p>
+
     </main>
   );
 }
