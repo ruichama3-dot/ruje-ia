@@ -120,6 +120,21 @@ function NovoTrabalho() {
   const [mode, setMode] = useState<"individual" | "grupo">("individual");
   const [refsMode, setRefsMode] = useState<"automatica" | "manual">("automatica");
 
+  const { isAdmin, isLoading: loadingRole } = useIsAdmin();
+
+  const { data: sub, isLoading: loadingSub } = useQuery({
+    queryKey: ["my-subscription", user.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan, daily_limit, expires_at")
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: false })
+        .limit(1);
+      return data?.[0] ?? null;
+    },
+  });
+
   const { data: sample, isLoading: loadingSample } = useQuery({
     queryKey: ["sample", amostra],
     enabled: Boolean(amostra),
@@ -129,6 +144,7 @@ function NovoTrabalho() {
       return data;
     },
   });
+
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
