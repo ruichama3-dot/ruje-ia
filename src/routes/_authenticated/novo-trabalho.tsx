@@ -61,7 +61,7 @@ function Sel({
   id: string;
   label: string;
   options: string[];
-  defaultValue?: string;
+  defaultValue?: string | undefined;
 }) {
   return (
     <div className="space-y-1.5">
