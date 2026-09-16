@@ -1,10 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { generateWork } from "@/lib/works.functions";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,6 +122,21 @@ function NovoTrabalho() {
   const [mode, setMode] = useState<"individual" | "grupo">("individual");
   const [refsMode, setRefsMode] = useState<"automatica" | "manual">("automatica");
 
+  const { isAdmin, isLoading: loadingRole } = useIsAdmin();
+
+  const { data: sub, isLoading: loadingSub } = useQuery({
+    queryKey: ["my-subscription", user.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan, daily_limit, expires_at")
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: false })
+        .limit(1);
+      return data?.[0] ?? null;
+    },
+  });
+
   const { data: sample, isLoading: loadingSample } = useQuery({
     queryKey: ["sample", amostra],
     enabled: Boolean(amostra),
@@ -129,6 +146,7 @@ function NovoTrabalho() {
       return data;
     },
   });
+
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -180,9 +198,25 @@ function NovoTrabalho() {
     }
   }
 
-  if (amostra && loadingSample) {
-    return <main className="mx-auto max-w-4xl px-5 py-10 text-muted-foreground">A carregar o modelo…</main>;
+  if ((amostra && loadingSample) || loadingSub || loadingRole) {
+    return <main className="mx-auto max-w-4xl px-5 py-10 text-muted-foreground">A carregar…</main>;
   }
+
+  if (!isAdmin && !sub) {
+    return (
+      <main className="mx-auto max-w-2xl px-5 py-16 text-center">
+        <h1 className="text-3xl font-extrabold">Precisa de um plano activo</h1>
+        <p className="text-muted-foreground mt-3">
+          Para criar trabalhos na RuJe IA é necessário ter um plano activo. Escolha o plano que
+          melhor lhe serve e envie o comprovativo do pagamento.
+        </p>
+        <Button asChild size="lg" className="shadow-brand mt-7">
+          <Link to="/planos">Ver planos</Link>
+        </Button>
+      </main>
+    );
+  }
+
 
   return (
     <main className="mx-auto max-w-4xl px-5 py-8">

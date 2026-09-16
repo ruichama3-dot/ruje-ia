@@ -88,7 +88,7 @@ function Painel() {
     ? "Administrador · acesso ilimitado"
     : sub
       ? `${sub.plan} · ${sub.daily_limit} trabalhos/dia até ${new Date(sub.expires_at).toLocaleDateString("pt-PT")}`
-      : "Plano grátis · 1 trabalho por dia";
+      : "Sem plano activo · escolha um plano para criar trabalhos";
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-8">

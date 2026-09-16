@@ -80,6 +80,12 @@ export const generateWork = createServerFn({ method: "POST" })
 
       const limit = subs?.[0]?.daily_limit ?? FREE_DAILY_LIMIT;
 
+      if (!subs?.[0]) {
+        throw new Error(
+          "Precisa de um plano activo para criar trabalhos. Escolha um plano na página Planos.",
+        );
+      }
+
       const { count } = await context.supabase
         .from("works")
         .select("id", { count: "exact", head: true })
@@ -89,11 +95,10 @@ export const generateWork = createServerFn({ method: "POST" })
 
       if ((count ?? 0) >= limit) {
         throw new Error(
-          subs?.[0]
-            ? `Atingiu o limite de ${limit} trabalhos por dia do seu plano. Tente novamente amanhã.`
-            : "Já usou o seu trabalho gratuito de hoje. Escolha um plano para continuar a criar trabalhos.",
+          `Atingiu o limite de ${limit} trabalhos por dia do seu plano. Tente novamente amanhã.`,
         );
       }
+
     }
 
     const { data: work, error } = await context.supabase
