@@ -145,7 +145,11 @@ function Planos() {
             <button type="button" onClick={() => setMethod(m.id)} className="text-left">
               <p className="text-lg font-bold">{m.name}</p>
               <p className="mt-1 text-2xl font-extrabold tracking-wide">{m.number}</p>
+              {m.holder ? (
+                <p className="text-muted-foreground mt-1 text-sm">Nome: {m.holder}</p>
+              ) : null}
             </button>
+
             <Button variant="outline" className="mt-3 w-full" onClick={() => copy(m.number)}>
               <Copy className="h-4 w-4" /> Copiar número
             </Button>

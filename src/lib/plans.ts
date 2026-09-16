@@ -14,11 +14,12 @@ export const PLANS: Plan[] = [
 ];
 
 export const PAYMENT_METHODS = [
-  { id: "emola", name: "Emola", number: "872954503" },
-  { id: "mpesa", name: "M-Pesa", number: "851589567" },
+  { id: "emola", name: "Emola", number: "872954503", holder: "Laura Ermelindo" },
+  { id: "mpesa", name: "M-Pesa", number: "851589567", holder: "" },
 ];
 
-export const FREE_DAILY_LIMIT = 1;
+export const FREE_DAILY_LIMIT = 0;
+
 
 export function planById(id: string): Plan | undefined {
   return PLANS.find((p) => p.id === id);
