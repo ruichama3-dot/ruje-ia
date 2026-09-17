@@ -57,13 +57,114 @@ function startOfTodayISO() {
   return d.toISOString();
 }
 
+const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6L1wPvBFqHAyZYqGi948wEy-lI8K79IgCpMf2JVEakYeg";
+
+async function callAI(prompt: string): Promise<string> {
+  const geminiKey =
+    process.env["GEMINI_API_KEY"] ||
+    process.env["GOOGLE_API_KEY"] ||
+    (process.env["LOVABLE_API_KEY"]?.startsWith("AQ.") || process.env["LOVABLE_API_KEY"]?.startsWith("AIza")
+      ? process.env["LOVABLE_API_KEY"]
+      : "") ||
+    DEFAULT_GEMINI_KEY;
+
+  if (geminiKey) {
+    // Modelos Google Gemini com fallback automático em caso de sobrecarga (503/429/404)
+    const models = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.1-flash-lite"];
+    let lastError: Error | null = null;
+
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 8192,
+            },
+          }),
+        });
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          if (res.status === 503 || res.status === 429 || res.status === 404) {
+            lastError = new Error(`Modelo ${model} indisponível (${res.status}): ${errText}`);
+            continue;
+          }
+          throw new Error(`Falha na geração com Gemini (${res.status}): ${errText}`);
+        }
+
+        const data = (await res.json()) as {
+          candidates?: { content?: { parts?: { text?: string }[] } }[];
+        };
+        const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+        if (text.trim()) {
+          return text;
+        }
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        continue;
+      }
+    }
+
+    if (lastError) {
+      console.warn("Aviso na tentativa com modelos Gemini:", lastError.message);
+    }
+  }
+
+  // Fallback para Lovable Gateway caso configurado e diferente da chave Gemini
+  const lovableApiKey = process.env["LOVABLE_API_KEY"];
+  if (lovableApiKey && !lovableApiKey.startsWith("AQ.") && !lovableApiKey.startsWith("AIza")) {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": lovableApiKey },
+      body: JSON.stringify({
+        model: "google/gemini-3.8-flash",
+        stream: true,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (res.ok && res.body) {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let content = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === "[DONE]") continue;
+          try {
+            const json = JSON.parse(payload) as {
+              choices?: { delta?: { content?: string } }[];
+            };
+            content += json.choices?.[0]?.delta?.content ?? "";
+          } catch {
+            /* ignore partial chunks */
+          }
+        }
+      }
+      if (content.trim()) return content;
+    }
+  }
+
+  throw new Error("Não foi possível comunicar com o serviço de IA. Tente novamente dentro de instantes.");
+}
+
 export const generateWork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => GenerateInput.parse(d))
   .handler(async ({ data, context }) => {
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) throw new Error("Serviço de IA indisponível.");
-
     // Administradores têm acesso ilimitado.
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
@@ -98,7 +199,6 @@ export const generateWork = createServerFn({ method: "POST" })
           `Atingiu o limite de ${limit} trabalhos por dia do seu plano. Tente novamente amanhã.`,
         );
       }
-
     }
 
     const { data: work, error } = await context.supabase
@@ -108,49 +208,9 @@ export const generateWork = createServerFn({ method: "POST" })
       .single();
     if (error || !work) throw new Error("Trabalho não encontrado.");
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-      body: JSON.stringify({
-        model: "google/gemini-3.8-flash",
-        stream: true,
-        messages: [{ role: "user", content: buildPrompt(work as Record<string, unknown>) }],
-      }),
-    });
+    const rawContent = await callAI(buildPrompt(work as Record<string, unknown>));
 
-    if (!res.ok || !res.body) {
-      if (res.status === 429) throw new Error("Muitos pedidos. Tente novamente daqui a instantes.");
-      if (res.status === 402) throw new Error("Créditos de IA esgotados. Adicione créditos para continuar.");
-      throw new Error(`Falha na geração (${res.status}).`);
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let content = "";
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const payload = trimmed.slice(5).trim();
-        if (payload === "[DONE]") continue;
-        try {
-          const json = JSON.parse(payload) as {
-            choices?: { delta?: { content?: string } }[];
-          };
-          content += json.choices?.[0]?.delta?.content ?? "";
-        } catch {
-          /* ignore partial chunks */
-        }
-      }
-    }
-
-    const html = content
+    const html = rawContent
       .replace(/^```(?:html)?/i, "")
       .replace(/```$/i, "")
       .trim();
@@ -164,3 +224,4 @@ export const generateWork = createServerFn({ method: "POST" })
 
     return { content: html };
   });
+
