@@ -15,7 +15,7 @@ export const PLANS: Plan[] = [
 
 export const PAYMENT_METHODS = [
   { id: "emola", name: "Emola", number: "872954503", holder: "Laura Ermelindo" },
-  { id: "mpesa", name: "M-Pesa", number: "851589567", holder: "" },
+  { id: "mpesa", name: "M-Pesa", number: "851589567", holder: "JEREMIAS NIUONENO ROMAO" },
 ];
 
 export const FREE_DAILY_LIMIT = 0;
