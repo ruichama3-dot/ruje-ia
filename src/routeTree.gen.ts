@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedExamesRouteImport } from './routes/_authenticated/exames'
 import { Route as AuthenticatedNovoTrabalhoRouteImport } from './routes/_authenticated/novo-trabalho'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
@@ -44,6 +45,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExamesRoute = AuthenticatedExamesRouteImport.update({
+  id: '/exames',
+  path: '/exames',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNovoTrabalhoRoute =
@@ -88,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/exames': typeof AuthenticatedExamesRoute
+  '/exames': typeof AuthenticatedExamesRoute
   '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/exames': typeof AuthenticatedExamesRoute
   '/_authenticated/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
@@ -131,6 +140,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/admin'
+    | '/exames'
+    | '/exames'
     | '/novo-trabalho'
     | '/painel'
     | '/perfil'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/admin'
+    | '/_authenticated/exames'
     | '/_authenticated/novo-trabalho'
     | '/_authenticated/painel'
     | '/_authenticated/perfil'
@@ -204,6 +216,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/exames': {
+      id: '/_authenticated/exames'
+      path: '/exames'
+      fullPath: '/exames'
+      preLoaderRoute: typeof AuthenticatedExamesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
