@@ -19,9 +19,7 @@ export const Route = createFileRoute("/_authenticated/exames")({
   component: ExamesPage,
 });
 
-// The real exam catalogue will be populated from protected storage once the source archive is imported.
-// Do not seed fictional exams or expose paid files through public URLs.
-type Exam = { id: string; year: number; subject: string; label: string; storagePath: string };
+// The catalogue lists only files supplied by the user; paid files must be imported into protected storage before access is enabled.
 type Exam = { id: string; year: number; subject: string; label: string; sourceFile: string; status: "pending_import" };
 const EXAMS: Exam[] = [
   { id: "quimica-2020-1a-epoca", year: 2020, subject: "Química", label: "1.ª época", sourceFile: "Quimica-2020-12a-Classe-1a-Epoca.pdf", status: "pending_import" },
@@ -32,7 +30,6 @@ const EXAMS: Exam[] = [
 ];
 const SUBJECTS = ["Biologia", "Desenho e Geometria Descritiva (DGD)", "Filosofia", "Física", "Francês", "Geografia", "História", "Inglês", "Matemática", "Português", "Química"];
 const RECEIVED_SUBJECTS = new Set(["Química"]);
-const EXAMS: Exam[] = [];
 
 function ExamesPage() {
   const { user } = Route.useRouteContext();
