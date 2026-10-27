@@ -104,6 +104,23 @@ function Painel() {
         </Button>
       </div>
 
+      <Link
+        to="/exames"
+        className="shadow-soft mt-4 flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-5 transition-colors hover:border-primary sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-primary/10 p-3 text-primary">
+            <BookOpen className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="font-bold">Comprar Exames da 12.ª Classe</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Exames de 2020 a 2025, organizados por ano e disciplina. Estuda com apoio da IA.</p>
+            <p className="mt-2 text-sm font-semibold text-primary">Pacote de acesso: 125 MT</p>
+          </div>
+        </div>
+        <span className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Explorar exames →</span>
+      </Link>
+
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary bg-secondary/50 p-5">
         <p className="flex items-center gap-2 font-semibold">
           {isAdmin ? <ShieldCheck className="h-4 w-4 text-primary" /> : <Crown className="h-4 w-4 text-primary" />}
