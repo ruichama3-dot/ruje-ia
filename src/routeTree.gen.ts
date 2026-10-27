@@ -284,6 +284,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedExamesRoute: typeof AuthenticatedExamesRoute
   AuthenticatedNovoTrabalhoRoute: typeof AuthenticatedNovoTrabalhoRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
@@ -294,6 +295,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedExamesRoute: AuthenticatedExamesRoute,
   AuthenticatedNovoTrabalhoRoute: AuthenticatedNovoTrabalhoRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
