@@ -95,7 +95,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/exames': typeof AuthenticatedExamesRoute
-  '/exames': typeof AuthenticatedExamesRoute
   '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -109,6 +108,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/exames': typeof AuthenticatedExamesRoute
   '/novo-trabalho': typeof AuthenticatedNovoTrabalhoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -140,7 +140,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/admin'
-    | '/exames'
     | '/exames'
     | '/novo-trabalho'
     | '/painel'
