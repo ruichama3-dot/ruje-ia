@@ -29,7 +29,7 @@ const EXAMS: Exam[] = [
   { id: "quimica-2022-2a-chamada", year: 2022, subject: "Química", label: "2.ª chamada", sourceFile: "Quimica-2022-da-12a-classe-2a-chamada.pdf", status: "pending_import" },
 ];
 const SUBJECTS = ["Biologia", "Desenho e Geometria Descritiva (DGD)", "Filosofia", "Física", "Francês", "Geografia", "História", "Inglês", "Matemática", "Português", "Química"];
-const RECEIVED_SUBJECTS = new Set(["Química"]);
+const SUBJECTS_WITH_FILES = new Set(["Química"]);
 
 function ExamesPage() {
   const { user } = Route.useRouteContext();
@@ -161,7 +161,7 @@ function ExamesPage() {
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2">{filtered.map((exam) => (
             <article key={exam.id} className="rounded-xl border bg-card p-4">
-              <div className="flex items-start gap-3"><FileText className="mt-1 h-5 w-5 text-primary" /><div className="min-w-0 flex-1"><h3 className="font-semibold">{exam.subject}</h3><p className="text-sm text-muted-foreground">{exam.year} · {exam.label}</p><p className="mt-1 break-all text-xs text-muted-foreground">Ficheiro recebido: {exam.sourceFile}</p><p className="mt-2 text-xs font-medium text-amber-600">A aguardar importação segura</p></div></div>
+              <div className="flex items-start gap-3"><FileText className="mt-1 h-5 w-5 text-primary" /><div className="min-w-0 flex-1"><h3 className="font-semibold">{exam.subject}</h3><p className="text-sm text-muted-foreground">{exam.year} · {exam.label}</p><p className="mt-1 break-all text-xs text-muted-foreground">Documento registado: {exam.sourceFile}</p><p className="mt-2 text-xs font-medium text-amber-600">A aguardar importação segura</p></div></div>
               <div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" disabled><LockKeyhole className="mr-2 h-4 w-4" /> Abrir exame</Button><Button disabled><BrainCircuit className="mr-2 h-4 w-4" /> Estudar com IA</Button></div>
             </article>
           ))}</div>
@@ -170,15 +170,15 @@ function ExamesPage() {
       <section className="mt-10 rounded-2xl border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div><h2 className="text-xl font-bold">Disciplinas da 12.ª classe</h2><p className="mt-1 text-sm text-muted-foreground">Lista de referência para organizar o catálogo de exames nacionais de Moçambique.</p></div>
-          <span className="rounded-full bg-secondary px-3 py-1 text-sm font-semibold">{SUBJECTS.length - RECEIVED_SUBJECTS.size} por reunir</span>
+          <span className="rounded-full bg-secondary px-3 py-1 text-sm font-semibold">{SUBJECTS.length - SUBJECTS_WITH_FILES.size} por reunir</span>
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {SUBJECTS.map((subject) => {
-            const received = RECEIVED_SUBJECTS.has(subject);
-            return <div key={subject} className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm"><span>{subject}</span><span className={received ? "shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary" : "shrink-0 rounded-full bg-secondary px-2 py-1 text-xs text-muted-foreground"}>{received ? "Recebido" : "Em falta"}</span></div>;
+            const received = SUBJECTS_WITH_FILES.has(subject);
+            return <div key={subject} className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm"><span>{subject}</span><span className={received ? "shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary" : "shrink-0 rounded-full bg-secondary px-2 py-1 text-xs text-muted-foreground"}>{received ? "Documentos reunidos" : "Ainda sem ficheiros"}</span></div>;
           })}
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Lista de referência baseada em listas públicas de exames finais. A oferta exacta pode variar conforme o regime e o ano.</p>
+        <p className="mt-3 text-xs text-muted-foreground">Os ficheiros indicados foram enviados nesta conversa, mas ainda precisam de ser importados para armazenamento privado antes de poderem ser abertos ou usados pela IA. A lista de disciplinas é uma referência e pode variar conforme o regime e o ano.</p>
       </section>
       <p className="mt-8 text-center text-xs text-muted-foreground">RuJe IA 🇲🇿 · Conteúdos organizados para apoiar a preparação académica. A disponibilidade dos exames depende da importação dos ficheiros correspondentes.</p>
     </main>
