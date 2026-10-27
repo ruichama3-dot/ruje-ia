@@ -22,6 +22,16 @@ export const Route = createFileRoute("/_authenticated/exames")({
 // The real exam catalogue will be populated from protected storage once the source archive is imported.
 // Do not seed fictional exams or expose paid files through public URLs.
 type Exam = { id: string; year: number; subject: string; label: string; storagePath: string };
+type Exam = { id: string; year: number; subject: string; label: string; sourceFile: string; status: "pending_import" };
+const EXAMS: Exam[] = [
+  { id: "quimica-2020-1a-epoca", year: 2020, subject: "Química", label: "1.ª época", sourceFile: "Quimica-2020-12a-Classe-1a-Epoca.pdf", status: "pending_import" },
+  { id: "quimica-2020-2a-epoca", year: 2020, subject: "Química", label: "2.ª época", sourceFile: "Quimica-2020-12a-Classe-2a-Epoca.pdf", status: "pending_import" },
+  { id: "quimica-2021-1a-chamada", year: 2021, subject: "Química", label: "1.ª chamada", sourceFile: "Quimica-2021-12a-classe-1a-chamada.pdf", status: "pending_import" },
+  { id: "quimica-2022-1a-chamada", year: 2022, subject: "Química", label: "1.ª chamada", sourceFile: "Quimica-2022-12a-classe-1a-chamada.pdf", status: "pending_import" },
+  { id: "quimica-2022-2a-chamada", year: 2022, subject: "Química", label: "2.ª chamada", sourceFile: "Quimica-2022-da-12a-classe-2a-chamada.pdf", status: "pending_import" },
+];
+const SUBJECTS = ["Biologia", "Desenho e Geometria Descritiva (DGD)", "Filosofia", "Física", "Francês", "Geografia", "História", "Inglês", "Matemática", "Português", "Química"];
+const RECEIVED_SUBJECTS = new Set(["Química"]);
 const EXAMS: Exam[] = [];
 
 function ExamesPage() {
@@ -134,13 +144,13 @@ function ExamesPage() {
 
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div><h2 className="text-2xl font-bold">Explorar por ano</h2><p className="mt-1 text-sm text-muted-foreground">Seleciona um ano para consultar os exames importados.</p></div>
+          <div><h2 className="text-2xl font-bold">Explorar por ano</h2><p className="mt-1 text-sm text-muted-foreground">Seleciona um ano para consultar os exames registados. Os ficheiros só ficam disponíveis após importação segura.</p></div>
           <div className="relative w-full sm:max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" placeholder="Pesquisar disciplina..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {[2020, 2021, 2022, 2023, 2024, 2025].map((item) => (
             <button key={item} onClick={() => setYear(year === item ? null : item)} className={`rounded-2xl border p-4 text-left transition-colors hover:border-primary/50 ${year === item ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-card"}`}>
-              <CalendarDays className="h-5 w-5 text-primary" /><p className="mt-3 text-2xl font-extrabold">{item}</p><p className="text-xs text-muted-foreground">{EXAMS.filter((exam) => exam.year === item).length} exames disponíveis</p>
+              <CalendarDays className="h-5 w-5 text-primary" /><p className="mt-3 text-2xl font-extrabold">{item}</p><p className="text-xs text-muted-foreground">{EXAMS.filter((exam) => exam.year === item).length} registados</p>
             </button>
           ))}
         </div>
@@ -154,11 +164,24 @@ function ExamesPage() {
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2">{filtered.map((exam) => (
             <article key={exam.id} className="rounded-xl border bg-card p-4">
-              <div className="flex items-start gap-3"><FileText className="mt-1 h-5 w-5 text-primary" /><div className="min-w-0 flex-1"><h3 className="font-semibold">{exam.subject}</h3><p className="text-sm text-muted-foreground">{exam.year} · {exam.label}</p></div></div>
+              <div className="flex items-start gap-3"><FileText className="mt-1 h-5 w-5 text-primary" /><div className="min-w-0 flex-1"><h3 className="font-semibold">{exam.subject}</h3><p className="text-sm text-muted-foreground">{exam.year} · {exam.label}</p><p className="mt-1 break-all text-xs text-muted-foreground">Ficheiro recebido: {exam.sourceFile}</p><p className="mt-2 text-xs font-medium text-amber-600">A aguardar importação segura</p></div></div>
               <div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" disabled><LockKeyhole className="mr-2 h-4 w-4" /> Abrir exame</Button><Button disabled><BrainCircuit className="mr-2 h-4 w-4" /> Estudar com IA</Button></div>
             </article>
           ))}</div>
         )}
+      </section>
+      <section className="mt-10 rounded-2xl border bg-card p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><h2 className="text-xl font-bold">Disciplinas da 12.ª classe</h2><p className="mt-1 text-sm text-muted-foreground">Lista de referência para organizar o catálogo de exames nacionais de Moçambique.</p></div>
+          <span className="rounded-full bg-secondary px-3 py-1 text-sm font-semibold">{SUBJECTS.length - RECEIVED_SUBJECTS.size} por reunir</span>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {SUBJECTS.map((subject) => {
+            const received = RECEIVED_SUBJECTS.has(subject);
+            return <div key={subject} className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm"><span>{subject}</span><span className={received ? "shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary" : "shrink-0 rounded-full bg-secondary px-2 py-1 text-xs text-muted-foreground"}>{received ? "Recebido" : "Em falta"}</span></div>;
+          })}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Lista de referência baseada em listas públicas de exames finais. A oferta exacta pode variar conforme o regime e o ano.</p>
       </section>
       <p className="mt-8 text-center text-xs text-muted-foreground">RuJe IA 🇲🇿 · Conteúdos organizados para apoiar a preparação académica. A disponibilidade dos exames depende da importação dos ficheiros correspondentes.</p>
     </main>
