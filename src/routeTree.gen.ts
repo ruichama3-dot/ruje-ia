@@ -154,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/admin'
+    | '/exames'
     | '/novo-trabalho'
     | '/painel'
     | '/perfil'
